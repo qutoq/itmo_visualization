@@ -1,28 +1,23 @@
 services:
-  app:
+  bot:
     build:
       context: .
       dockerfile: Dockerfile
-    image: app:latest
-    env_file: .env
-    networks:
-      - wiza_network
-
-  bot:
-    image: app:latest
+    image: app:latest  # Создаем образ один раз
     command: ["python", "./bot.py"]
+    env_file: .env
     depends_on:
       - redis
     networks:
-      - wiza_network
+      - vnet
 
   worker:
-    image: app:latest
+    image: app:latest  # Используем уже собранный образ
     command: ["celery", "-A", "src.tasks", "worker", "--loglevel=info"]
     depends_on:
       - redis
     networks:
-      - wiza_network
+      - vnet
 
   flower:
     image: app:latest
@@ -32,16 +27,16 @@ services:
     ports:
       - "5555:5555"
     networks:
-      - wiza_network
+      - vnet
 
   redis:
     image: redis:alpine
     restart: always
     networks:
-      - wiza_network
+      - vnet
 
 networks:
-  wiza_network:
+  vnet:
     driver: bridge
     ipam:
       config:
