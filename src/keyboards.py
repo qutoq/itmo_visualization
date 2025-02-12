@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import (
     InlineKeyboardBuilder
 )
 
+back = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Отмена')]], resize_keyboard=True)
 
 def keyboard_vizual_vars():
     builder = ReplyKeyboardBuilder()

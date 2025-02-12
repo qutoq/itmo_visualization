@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: app:latest  # Создаем образ один раз
+    image: app:latest
     command: ["python", "./bot.py"]
     env_file: .env
     depends_on:
@@ -12,7 +12,7 @@ services:
       - vnet
 
   worker:
-    image: app:latest  # Используем уже собранный образ
+    image: app:latest 
     command: ["celery", "-A", "src.tasks", "worker", "--loglevel=info"]
     depends_on:
       - redis
