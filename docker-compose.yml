@@ -1,31 +1,38 @@
 services:
-  base: &base
+  app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: app:latest
     env_file: .env
+    networks:
+      - wiza_network
+
+  bot:
+    image: app:latest
+    command: ["python", "./bot.py"]
     depends_on:
       - redis
     networks:
       - wiza_network
 
-  bot:
-    <<: *base
-    command: ["python", "./bot.py"]
-
   worker:
-    <<: *base
-    command: ["celery", "-A", "tasks", "worker", "--loglevel=info"]
+    image: app:latest
+    command: ["celery", "-A", "src.tasks", "worker", "--loglevel=info"]
     depends_on:
       - redis
+    networks:
+      - wiza_network
 
   flower:
-    <<: *base
-    command: ["celery", "-A", "tasks", "flower", "--port=5555"]
+    image: app:latest
+    command: ["celery", "-A", "src.tasks", "flower", "--port=5555"]
     depends_on:
       - redis
     ports:
       - "5555:5555"
+    networks:
+      - wiza_network
 
   redis:
     image: redis:alpine

@@ -7,8 +7,8 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from tasks import add
-from src.states.states import Stage
+from src.tasks import add
+from src.states import Stage
 
 
 router: Router = Router()

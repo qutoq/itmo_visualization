@@ -1,0 +1,9 @@
+aiogram
+asyncio
+celery
+flower
+matplotlib
+pandas
+pydantic
+python-dotenv==1.0.0
+redis
