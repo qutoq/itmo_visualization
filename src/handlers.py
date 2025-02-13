@@ -8,7 +8,7 @@ import pandas as pd
 import json
 import io
 
-from src.tasks import add, visualize
+from src.tasks import add, generate_plot
 from src.states import Stage
 from src.keyboards import keyboard_vizual_vars, back
 from src.utils import save_dataframe, load_dataframe
@@ -98,7 +98,7 @@ async def stage_3(message: Message, state: FSMContext):
 
     data = await state.get_data()
     print(data)
-    task = visualize.delay(vis_df.to_json(), data['choice'])
+    task = generate_plot.delay(vis_df.to_json(), data['choice'])
     await message.answer(f"Задача запущена! ID: {task.id}")
     await state.clear()
 

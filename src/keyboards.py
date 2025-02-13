@@ -15,6 +15,6 @@ def keyboard_vizual_vars():
     for el in choice_types.keys():
         builder.button(text=el) 
     builder.button(text='Отмена')
-    builder.adjust(2, 2, 1)
+    builder.adjust(2, 2, 2, 1)
 
     return builder.as_markup()

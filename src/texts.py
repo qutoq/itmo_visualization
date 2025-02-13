@@ -1,6 +1,8 @@
-choice_types = {'1 вариант': '111',
-                '2 вариант': '52',
-                '333': '333',
-                '4 вариант': '444'}
+choice_types = {'line': 'linelineline', 
+               'pie': 'piepiepie', 
+               'hist': 'histhisthist', 
+               'cascade': 'cascadecascadecascade', 
+               'scatter': 'scatterscatterscatter',
+               'wordcloud': 'wordcloudwordcloudwordcloud'}
 
 choice = 'Выбери тип диаграммы'
