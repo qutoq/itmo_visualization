@@ -111,7 +111,11 @@ async def stage_3(message: Message, state: FSMContext):
     if cols == -1: 
         return await message.answer(texts.err_again)
 
-    vis_df = df[cols]
+    try:
+        vis_df = df[cols]
+    except Exception as e:
+        return await message.answer(texts.err_again)
+
     rows = min(7, len(df))
     text = f"*Общая информация:* \n```{escape_md_v2(vis_df.sample(rows))}```"
     await message.answer(text, parse_mode="MarkdownV2", reply_markup=back)  
