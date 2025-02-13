@@ -3,10 +3,14 @@ import pandas as pd
 from aiogram.fsm.context import FSMContext
 import re
 
+from src import texts
 
 async def save_dataframe(state: FSMContext, df: pd.DataFrame):
-    csv_data = df.to_csv(index=False)
-    await state.update_data(dataframe=csv_data)
+    try:
+        csv_data = df.to_csv(index=False)
+        await state.update_data(dataframe=csv_data)
+    except Exception as e:
+        return texts.err_df
 
 
 async def load_dataframe(state: FSMContext):
@@ -16,10 +20,10 @@ async def load_dataframe(state: FSMContext):
             df = pd.read_csv(io.StringIO(data["dataframe"]))
             return df
         await state.clear()
-        return 'Ошибка загрузки данных. Попробуйте снова'
+        return texts.err_df
     except Exception as e:
         await state.clear()
-        return 'Ошибка загрузки данных. Попробуйте снова'
+        return texts.err_df
     
 
 def get_cols(text):

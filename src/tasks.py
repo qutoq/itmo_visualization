@@ -11,9 +11,6 @@ from src import texts
 app = Celery("tasks")
 app.config_from_object("config.celeryconfig")
 
-@app.task
-def add(x, y):
-    return x + y
 
 def validate_data(df: pd.DataFrame, chart_type: str) -> bool:
     """
