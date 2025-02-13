@@ -1,16 +1,19 @@
 import asyncio
-import io
-import pandas as pd
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, BufferedInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+import pandas as pd
+import json
+import io
 
-from src.tasks import add
+from src.tasks import add, visualize
 from src.states import Stage
 from src.keyboards import keyboard_vizual_vars, back
 from src.utils import save_dataframe, load_dataframe
+from src.utils import get_cols, escape_md_v2
+from src import texts
 
 router: Router = Router()
 
@@ -51,33 +54,58 @@ async def stage_1(message: Message, state: FSMContext):
     except Exception as e:
         await message.answer('Неверный формат данных')
         return
+    
     res = await save_dataframe(state, df)
-    await message.answer('Выбери тип диаграммы', reply_markup=keyboard_vizual_vars()) 
+    await message.answer(texts.choice, reply_markup=keyboard_vizual_vars()) 
+
     await state.set_state(Stage.choice)
 
 
 @router.message(Stage.choice)
 async def stage_2(message: Message, state: FSMContext):
-    try:
-        df = await load_dataframe(state)
-    except Exception as e:
-        await message.answer('Ошибка загрузки данных. Попробуйте снова')
-        await state.clear()
+    if message.text in texts.choice_types.keys(): 
+        await state.update_data(choice=message.text)
+    else:
         return
     
+    df = await load_dataframe(state)
+    if type(df) == str:
+        return await message.answer(df)
+    
     rows = min(7, len(df))
-    text = f"*Общая информация:*\n Список столбцов: {df.columns.tolist()} \n```{df.sample(rows)}```"
+    text = f"*Полученая информация:*\nСписок столбцов: {df.columns.tolist()} \n"
+    text += f'Часть данных:```{df.sample(rows)}```'
     await message.answer(text, parse_mode="MarkdownV2", reply_markup=back)  
-    await state.clear()
+    await message.answer(texts.choice_types[message.text] + '\nВведи названия столбцов для визуализации')
+
+    await state.set_state(Stage.columns)
 
 
 @router.message(Stage.columns)
 async def stage_3(message: Message, state: FSMContext):
-    pass
-    #task = add.delay(2, 2)
-    #await message.answer(f"Задача запущена! ID: {task.id}")
-    #loop = asyncio.get_running_loop()
-    #result = await loop.run_in_executor(None, task.get, 20)
+    df = await load_dataframe(state)
+    if type(df) == str: 
+        return await message.answer(df)
+    
+    cols = get_cols(message.text)
+    if cols == -1: 
+        return await message.answer('Неверный формат данных. Попробуйте снова')
+
+    vis_df = df[cols]
+    rows = min(7, len(df))
+    text = f"*Общая информация:* \n```{escape_md_v2(vis_df.sample(rows))}```"
+    await message.answer(text, parse_mode="MarkdownV2", reply_markup=back)  
+
+    data = await state.get_data()
+    print(data)
+    task = visualize.delay(vis_df.to_json(), data['choice'])
+    await message.answer(f"Задача запущена! ID: {task.id}")
+    await state.clear()
+
+    loop = asyncio.get_running_loop()
+    image_bytes = await loop.run_in_executor(None, task.get, 10)
+
+    await message.answer_photo(BufferedInputFile(image_bytes, filename="chart.png"))
 
 
 @router.message(Command("add"))
@@ -90,3 +118,8 @@ async def test(message: Message):
     result = await loop.run_in_executor(None, task.get, 20)  # Ждём максимум 20 сек
     await message.answer(f"Результат: {result}")
 
+@router.message(F.text.lower() == "52") 
+async def test(message: Message, state: FSMContext):
+    await message.answer('писят два')
+
+    
