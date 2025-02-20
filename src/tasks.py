@@ -28,7 +28,6 @@ def validate_data(df: pd.DataFrame, chart_type: str) -> bool:
 def generate_plot(df_json, chart_type: str):
     """
     Генерирует и сохраняет график по данным из DataFrame.
-
     :param df_json: pandas DataFrame с данными
     :param chart_type: Тип диаграммы ('line', 'pie', 'hist', 'cascade', 'scatter', 'wordcloud')
     :return: bytecode при успешном выполнении
@@ -45,47 +44,48 @@ def generate_plot(df_json, chart_type: str):
 
     figsize = (12, 8) if chart_type != 'pie' else (8, 8)
     plt.figure(figsize=figsize)
-    sns.set_style("darkgrid")
+    sns.set_style("whitegrid")
 
     if chart_type == 'line':
         sns.lineplot(x=df.iloc[:, 0], y=df.iloc[:, 1])
-        plt.xlabel(df.columns[0])
-        plt.ylabel(df.columns[1])
-        plt.title(title)
+        plt.xlabel(df.columns[0], fontsize=10)
+        plt.ylabel(df.columns[1], fontsize=10)
+        plt.title(title, fontsize=18)
 
     elif chart_type == 'pie':
-        labels = df.iloc[:, 1] if df.shape[1] > 1 else [str(i) for i in range(len(df.iloc[:, 0]))]
-        plt.pie(df.iloc[:, 0], labels=labels, autopct='%1.1f%%')
-        plt.title(title)
+        labels = df.iloc[:, 1] if df.shape[1] > 1 else None
+        plt.pie(df.iloc[:, 0], labels=labels, autopct='%1.1f%%', textprops={'fontsize': 16})
+        plt.title(title, fontsize=18)
 
     elif chart_type == 'hist':
         sns.histplot(df.iloc[:, 1], bins=20, kde=True)
-        plt.xlabel(df.columns[1])
-        plt.ylabel("Частота")
-        plt.title(title)
+        plt.xlabel(df.columns[1], fontsize=10)
+        plt.ylabel("Частота", fontsize=10)
+        plt.title(title, fontsize=18)
 
     elif chart_type == 'cascade':
         x = np.arange(len(df.iloc[:, 0]))
-        y = df.iloc[:, 0].diff().fillna(df.iloc[:, 0])  # Изменение относительно предыдущего значения
+        y = df.iloc[:, 0]
+        start_points = np.zeros_like(y)
+        start_points[1:] = np.cumsum(y[:-1])
         colors = ['green' if v >= 0 else 'red' for v in y]
-        plt.bar(x, y, color=colors)
-        plt.xlabel(df.columns[0])
-        plt.ylabel("Изменение")
-        plt.title(title)
+        plt.bar(x, y, bottom=start_points, color=colors)
+        plt.xlabel(df.columns[0], fontsize=10)
+        plt.ylabel("Изменение", fontsize=10)
+        plt.title(title, fontsize=18)
 
     elif chart_type == 'scatter':
         sns.scatterplot(x=df.iloc[:, 0], y=df.iloc[:, 1])
-        plt.xlabel(df.columns[0])
-        plt.ylabel(df.columns[1])
-        plt.title(title)
+        plt.xlabel(df.columns[0], fontsize=10)
+        plt.ylabel(df.columns[1], fontsize=10)
+        plt.title(title, fontsize=18)
 
     elif chart_type == 'wordcloud':
         text = ' '.join(df.iloc[:, 0].astype(str))
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        plt.title(title)
-
+        plt.title(title, fontsize=18)
 
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches="tight")
