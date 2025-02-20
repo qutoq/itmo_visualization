@@ -29,8 +29,7 @@ def generate_plot(df_json, chart_type: str):
     """
     Генерирует и сохраняет график по данным из DataFrame.
 
-    :param df: pandas DataFrame с данными
-    :param title: Название графика
+    :param df_json: pandas DataFrame с данными
     :param chart_type: Тип диаграммы ('line', 'pie', 'hist', 'cascade', 'scatter', 'wordcloud')
     :return: bytecode при успешном выполнении
     :return: 'err' при неправильно указанном типе    """
@@ -55,7 +54,7 @@ def generate_plot(df_json, chart_type: str):
         plt.title(title)
 
     elif chart_type == 'pie':
-        labels = df.iloc[:, 1] if df.shape[1] > 1 else None
+        labels = df.iloc[:, 1] if df.shape[1] > 1 else [str(i) for i in range(len(df.iloc[:, 0]))]
         plt.pie(df.iloc[:, 0], labels=labels, autopct='%1.1f%%')
         plt.title(title)
 
@@ -67,10 +66,11 @@ def generate_plot(df_json, chart_type: str):
 
     elif chart_type == 'cascade':
         x = np.arange(len(df.iloc[:, 0]))
-        y = df.iloc[:, 0].cumsum()
-        plt.bar(x, y)
+        y = df.iloc[:, 0].diff().fillna(df.iloc[:, 0])  # Изменение относительно предыдущего значения
+        colors = ['green' if v >= 0 else 'red' for v in y]
+        plt.bar(x, y, color=colors)
         plt.xlabel(df.columns[0])
-        plt.ylabel("Накопленное значение")
+        plt.ylabel("Изменение")
         plt.title(title)
 
     elif chart_type == 'scatter':
