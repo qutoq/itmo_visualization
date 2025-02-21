@@ -19,7 +19,7 @@ def validate_data(df: pd.DataFrame, chart_type: str) -> bool:
     if df is None or df.empty:
         return False
 
-    if chart_type in {'line', 'scatter', 'hist'} and df.shape[1] < 2:
+    if chart_type in {'line', 'scatter'} and df.shape[1] < 2:
         return False
 
     return True
@@ -58,8 +58,8 @@ def generate_plot(df_json, chart_type: str):
         plt.title(title, fontsize=18)
 
     elif chart_type == 'hist':
-        sns.histplot(df.iloc[:, 1], bins=20, kde=True)
-        plt.xlabel(df.columns[1], fontsize=10)
+        sns.histplot(df.iloc[:, 0], bins=len(df.iloc[:, 0].unique()), discrete=True)
+        plt.xlabel(df.columns[0], fontsize=10)
         plt.ylabel("Частота", fontsize=10)
         plt.title(title, fontsize=18)
 
