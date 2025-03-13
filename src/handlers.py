@@ -10,10 +10,11 @@ import io
 
 from src.tasks import generate_plot
 from src.states import Stage
-from src.keyboards import keyboard_visual_vars, keyboard_start, keyboard_again, back
+from src.keyboards import keyboard_visual_vars, keyboard_start, keyboard_again, back, back_again
 from src.utils import save_dataframe, load_dataframe
 from src.utils import get_cols, escape_md_v2
 from src import texts
+from src.errors import MyError
 
 router: Router = Router()
 
@@ -21,13 +22,12 @@ router: Router = Router()
 @router.message(Command("start"))
 async def process_any_message(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer(texts.start, reply_markup=keyboard_start())
+    await message.answer(texts.start, reply_markup=keyboard_start(), parse_mode="MarkdownV2")
 
 @router.message(F.text == texts.btn_rules) 
 async def visual(message: Message, state: FSMContext):
     await state.clear()
-    await message.reply(texts.txt_rules, reply_markup=keyboard_start())
-
+    await message.answer(texts.txt_rules, reply_markup=keyboard_start(), parse_mode="MarkdownV2")
 
 @router.message(Command("visual"))
 @router.message(F.text == texts.visual) 
@@ -53,6 +53,11 @@ async def cancel(message: Message, state: FSMContext):
     await state.clear()
     return
     
+
+@router.message(F.text == texts.btn_legend) 
+async def lega(message: Message, state: FSMContext):
+    await message.answer(texts.legend, parse_mode="MarkdownV2")
+
 
 @router.message(Stage.input)
 async def stage_1(message: Message, state: FSMContext):
@@ -95,9 +100,9 @@ async def pre_stage_2(message: Message, state: FSMContext):
     rows = min(7, len(df))
     text = f"*Полученая информация:*\nСписок столбцов: {df.columns.tolist()} \n"
     text += f'Часть данных:```{df.sample(rows)}```'
-    await message.answer(text, parse_mode="MarkdownV2", reply_markup=back)  
-    await message.answer(texts.choice_types[message.text] + '\n' + texts.columns)
-
+    await message.answer(text, parse_mode="MarkdownV2", reply_markup=back_again())  
+    await message.answer(texts.choice_types[message.text], parse_mode="MarkdownV2")
+    await message.answer(texts.await_columns)
     await state.set_state(Stage.columns)
 
 
@@ -126,16 +131,11 @@ async def stage_3(message: Message, state: FSMContext):
     try:
         loop = asyncio.get_running_loop()
         image_bytes = await loop.run_in_executor(None, task.get, 10)
+    except MyError as err:
+        return await message.answer(err.message)
     except Exception as e:
-        await message.answer(texts.err_plot)
-        return
+        return await message.answer(texts.err_plot)
 
     await message.answer_photo(BufferedInputFile(image_bytes, filename="chart.png"))
     await message.answer(texts.final, reply_markup=keyboard_again())
-
-
-@router.message(F.text.lower() == "52") 
-async def test(message: Message):
-    await message.answer('писят два')
-
     

@@ -7,6 +7,7 @@ from wordcloud import WordCloud
 import io
 
 from src import texts
+from src.errors import MyError
 
 app = Celery("tasks")
 app.config_from_object("config.celeryconfig")
@@ -30,17 +31,17 @@ def generate_plot(df_json, chart_type: str):
     Генерирует и сохраняет график по данным из DataFrame.
     :param df_json: pandas DataFrame с данными
     :param chart_type: Тип диаграммы ('line', 'pie', 'hist', 'cascade', 'scatter', 'wordcloud')
-    :return: bytecode при успешном выполнении
-    :return: 'err' при неправильно указанном типе    """
+    :return: bytecode при успешном выполнении"""
+    #:return: 'err' при неправильно указанном типе    """
     
     title = chart_type
     df = pd.read_json(df_json)
 
-    if chart_type not in texts.choice_types.keys():
-        return 'err'
+    if chart_type not in texts.choice_types:
+        raise MyError(f"Недопустимый тип диаграммы {chart_type}. Доступные типы: {', '.join(texts.choice_types.keys())}.")
 
     if not validate_data(df, chart_type):
-        return 'err'
+        raise MyError(f"Ошибка валидации данных для типа диаграммы {chart_type}. Убедитесь, что данные соответствуют формату для выбранного типа.")
 
     figsize = (12, 8) if chart_type != 'pie' else (8, 8)
     plt.figure(figsize=figsize)
@@ -50,18 +51,18 @@ def generate_plot(df_json, chart_type: str):
         sns.lineplot(x=df.iloc[:, 0], y=df.iloc[:, 1])
         plt.xlabel(df.columns[0], fontsize=10)
         plt.ylabel(df.columns[1], fontsize=10)
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     elif chart_type == 'pie':
         labels = df.iloc[:, 1] if df.shape[1] > 1 else None
         plt.pie(df.iloc[:, 0], labels=labels, autopct='%1.1f%%', textprops={'fontsize': 16})
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     elif chart_type == 'hist':
         sns.histplot(df.iloc[:, 0], bins=len(df.iloc[:, 0].unique()), discrete=True)
         plt.xlabel(df.columns[0], fontsize=10)
         plt.ylabel("Частота", fontsize=10)
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     elif chart_type == 'cascade':
         x = np.arange(len(df.iloc[:, 0]))
@@ -72,20 +73,20 @@ def generate_plot(df_json, chart_type: str):
         plt.bar(x, y, bottom=start_points, color=colors)
         plt.xlabel(df.columns[0], fontsize=10)
         plt.ylabel("Изменение", fontsize=10)
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     elif chart_type == 'scatter':
         sns.scatterplot(x=df.iloc[:, 0], y=df.iloc[:, 1])
         plt.xlabel(df.columns[0], fontsize=10)
         plt.ylabel(df.columns[1], fontsize=10)
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     elif chart_type == 'wordcloud':
         text = ' '.join(df.iloc[:, 0].astype(str))
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
-        plt.title(title, fontsize=18)
+        #plt.title(title, fontsize=18)
 
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches="tight")

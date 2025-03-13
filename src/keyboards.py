@@ -9,13 +9,21 @@ from src import texts
 
 back = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Отмена')]], resize_keyboard=True)
 
+def back_again():
+    builder = ReplyKeyboardBuilder()
+    builder.button(text='Отмена')
+    builder.button(text=texts.again_stage_2) 
+    builder.adjust(2)
+
+    return builder.as_markup()
 
 def keyboard_visual_vars():
     builder = ReplyKeyboardBuilder()
     for el in texts.choice_types.keys():
         builder.button(text=el) 
+    builder.button(text=texts.btn_legend)
     builder.button(text='Отмена')
-    builder.adjust(2, 2, 2, 1)
+    builder.adjust(2, 2, 2, 2)
 
     return builder.as_markup()
 
